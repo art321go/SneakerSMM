@@ -1,0 +1,15 @@
+%% This script queries twitter for relevant data to validate the model
+
+%structure array to store our twitter API developer credentials
+dev_creds = struct('ConsumerKey','PbEz2JO8NwgcK4ISttw40EBbu',...
+    'ConsumerSecret','GX7g6bmkjteZ0FxzzXZoAcIJs4N5pBpIKgSqV41Mn3tnqfWbPQ',...
+    'AccessToken','2524009462-tfrH7mEVlqJloeHaqF5ZlegRjlusdrgwk5j3B5C',...
+    'AccessTokenSecret','e8nNL1PmghPrEqZnlvaaQ2rArYVuL6VHb5e7S254DUjlC');
+
+% accessing Twitty & Json management 
+addpath twitty_1.1.1; % Twitty
+addpath parse_json; % Twitty's default json parser
+addpath jsonlab; % I prefer JSONlab, however.
+load('creds.mat') % load my real credentials
+tw = twitty(creds); % instantiate a Twitty object
+tw.jsonParser = @loadjson; % specify JSONlab as json parser

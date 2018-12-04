@@ -1,0 +1,42 @@
+Links to Relevant Articles:
+
+https://fivethirtyeight.com/features/you-see-sneakers-these-guys-see-hundreds-of-millions-in-resale-profit/
+Takeaways: 
+Statistics on the Market
+Demographics of consumers and various players
+
+
+http://kwhs.wharton.upenn.edu/2016/08/sneakerheads-simple-strategy-buy-low-sell-high/
+Takeaways:
+Examples of Sellers and Social Media Use
+Price Mark Ups
+
+https://www.nytimes.com/2018/01/02/style/sneakercon-shoe-care-tips-shopping.html
+Takeaways:
+Anecdotal insights to various market players
+Examples of fraud identification in the market
+
+
+
+Links to Code Resources:
+
+Twitter API credentials:
+https://developer.twitter.com/en/apps/15999122
+
+eBay API documentation:
+https://developer.ebay.com/docs
+
+
+Twitter API Tutorials/Guides:
+https://www.mathworks.com/help/datafeed/twitter.html
+
+https://blogs.mathworks.com/loren/2014/06/04/analyzing-twitter-with-matlab/
+
+
+
+Files not written by this team:
+https://www.mathworks.com/matlabcentral/fileexchange/34837-twitty
+
+https://www.mathworks.com/matlabcentral/fileexchange/20565-json-parser
+
+https://www.mathworks.com/matlabcentral/fileexchange/68159-jsonlab
