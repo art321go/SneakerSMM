@@ -13,6 +13,7 @@ dev_creds = struct('ConsumerKey','PbEz2JO8NwgcK4ISttw40EBbu',...
 addpath twitty_1.1.1_originals; % Twitty
 addpath parse_json; % Twitty's default json parser
 addpath fangq-jsonlab-v1.8-1-gc3eb021; % JSONlab
+addpath AFINN;  %library of english text rated for sentiment analysis
 load('dev_creds.mat') % load my real credentials
 tw = twitty(dev_creds); % instantiate a Twitty object
 tw.jsonParser = @loadjson; % specify JSONlab as json parser
