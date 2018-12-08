@@ -1,4 +1,9 @@
-function [] = Financial_Model(n_agents, n_items, price, nbrands, rndbrand)
+function [] = Financial_Model(n_agents, n_items, price, nbrands, rndbrand, timesteps)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   CAUTION: SET THE NUMBER OF BRANDS LOW ENOUGH SO EVERY BRAND HAS    %
+%  ENOUGH SETTERS                                                      %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 agent = struct ('money', 0, 'soc_stat', 0, 'items', 0, 'desire', 0, 'mode', 0, 'buysell', 0, 'sprice', 0, 'bprice', 0, 'bought', 0, 'sold', 0, 'keep', 0);
 seller = struct ('money', 0, 'nitems', 0, 'socstat', 0, 'bprice', 0, 'sold', 0, 'mode', 0, 'initmoney', 0, 'brand', 0);
@@ -35,43 +40,46 @@ brand = repmat(brnd, nbrands, 1);
 total = 0;
 n_soc = 0; n_prof = 0; n_coll = 0; n_set = 0;
 
-while(n_soc<=0 || n_prof<=0 || n_coll<=0 || n_set<=0)
-n_set = randi([round(n_agents*0.1), round(n_agents*0.15)]);
-n_soc = randi([round(n_agents*0.25), round(n_agents*0.6)]);
-n_prof = randi([round(n_agents*0.2), round(n_agents*0.5)]);
-n_coll = n_agents - n_prof - n_soc - n_set;
+while(n_soc<=0 || n_prof<=0 || n_coll<=0 || n_set<=nbrands*3)
+n_coll = randi([round(n_agents*0.075), round(n_agents*0.1)]);
+n_soc = randi([round(n_agents*0.4), round(n_agents*0.6)]);
+n_prof = randi([round(n_agents*0.3), round(n_agents*0.6)]);
+n_set = n_agents - n_prof - n_soc - n_coll;
 end
 
 % Assign the sellers to each brand
-for i=1:nbrands
-   sperbrand(i) = round(n_set/nbrands);
-   exsel = mod(n_set, nbrands);
+sperbrand = zeros(1, nbrands);
+while (sperbrand) < 3 % There should be more than 3 trendsetters for each brand
+    for i=1:nbrands
+       sperbrand(i) = round(n_set/nbrands);
+       exsel = mod(n_set, nbrands);
+    end
+    index = 0;
+    for i=1:exsel
+        index = mod(i, nbrands);
+        sperbrand(index) = sperbrand(index) + 1;
+    end
+    el = 0;
+    for i=1:nbrands-1
+        el = round((rand*2-1)*round(n_set/(3*nbrands)));
+        sperbrand(i) = sperbrand(i) - el;
+        sperbrand(i+1) = sperbrand(i+1) + el;
+    end
+    tset = sum(sperbrand);
+    if tset > n_set
+       for i=1:tset-n_set
+          index = mod(i, nbrands)+1;
+          sperbrand(index) = sperbrand(index) - 1;
+       end
+    end
+    if tset < n_set
+       for i=1:n_set-tset
+          index = mod(i, nbrands)+1;
+          sperbrand(index) = sperbrand(index) + 1;
+       end
+    end
 end
-index = 0;
-for i=1:exsel
-    index = mod(i, nbrands);
-    sperbrand(index) = sperbrand(index) + 1;
-end
-el = 0;
-for i=1:nbrands-1
-    el = round((rand*2-1)*round(n_set/(3*nbrands)));
-    sperbrand(i) = sperbrand(i) - el;
-    sperbrand(i+1) = sperbrand(i+1) + el;
-end
-tset = sum(sperbrand);
-if tset > n_set
-   for i=1:tset-n_set
-      index = mod(i, nbrands)+1;
-      sperbrand(index) = sperbrand(index) - 1;
-   end
-end
-if tset < n_set
-   for i=1:n_set-tset
-      index = mod(i, nbrands)+1;
-      sperbrand(index) = sperbrand(index) + 1;
-   end
-end
-keyboard;
+% keyboard;
 
 sellers = repmat(seller, n_set, 1);
 buyers = repmat(buyer, (n_agents-n_set), 1);
@@ -111,7 +119,7 @@ for i=n_set+n_soc+1:n_set+n_soc+n_coll % Assign the values to the collectors
     people(i).money = (randi([15, 25]))*1e2;
     people(i).nitems = 0;
     people(i).soc_stat = randi([5, 20]);
-    people(i).desire = rand()*5;
+    people(i).desire = rand()*10+50;
     people(i).mode = 3;
     people(i).buysell = 1;
     people(i).keep = rand();
@@ -121,7 +129,7 @@ for i=n_set+n_soc+n_coll+1:n_agents % Assign the values to the profiteers
    people(i).money = (randi([15, 25]))*1e2;
    people(i).nitems = 0;
    people(i).soc_stat = randi([5, 20]);
-   people(i).desire = rand()*20+50;
+   people(i).desire = rand()*30+70;
    people(i).mode = 4;
    people(i).buysell = 1;
 end
@@ -191,7 +199,7 @@ for i=1:nbrands
    end
    w = h;
 end
-keyboard;
+% keyboard;
 sigmaprice = 0.05;
 ks = 2.5; %constant for the standard deviation for the selling and buying limit prices
 sigma = ks*sigmaprice;
@@ -208,23 +216,26 @@ for i=1:n_set
        end
     end
 end
-keyboard;
-
 
 % The probability of a socialitees buying an item depends on the social
 % status of the trendsetter that owns the item. Therefore, we need to make
 % that the trendsetters with lower social status put their items for sale
 % with a lower price so that they get bought
 
+%% Parameters to change something, such as the increase or decrease of the buying prices and selling prices, etc
 T = 20; %number of iterations for the time window for the sigma calculation
 Pc = 0.7; %probability an item is bought or sold (If a random number is higher than this value, then the item will be bought. If it is lower, it won't be bought
 sellpos = nsell; %This variable checks if there is any seller with items to sell
 buypos = nbuy; % This variable checks if there is any buyer with enough money to buy
 i = 0; % Checks the amount of iterations
-lowp = 120; %How much we lower the selling and buying prices of the agents who bought or sold something
+lowp = 70; %How much we lower the selling and buying prices of the agents who bought or sold something
 highp = 60; %How much we increase the prices in case the agent didn't do anything
 nful = 0;
 newitem = 50; %How frequent we insert new items into the model
+avgt = zeros(timesteps, round(timesteps/newitem)); %Preallocate the matrix containing the averages of all the items from one time period
+ipt = zeros(timesteps, round(timesteps/newitem)); %Preallocate the matrix for the amount of items from one time period
+vin = rand(nbrands, 1)*2 + 2; %Get the vintageness of the items once for the first iterations
+
 
 %     for j=1:nsell %Go through all the sellers and assign them their sell prices
 %        sellers(j).sprice = (price*(sellers(j).socstat/40))/normrnd(1.01, sigma);
@@ -235,12 +246,45 @@ newitem = 50; %How frequent we insert new items into the model
     
 %% Iterate
 
-while ~isempty(sellers) && ~isempty(buyers) && i<500
+% keyboard;
+while ~isempty(sellers) && ~isempty(buyers) && i<timesteps
     
     i = i + 1;
+    
+       % Introduce new items each 20 timesteps
+    if mod(i, newitem) == 0
+        %Change the time value in each item
+%         for j=1:length(buyers)
+%            for k=1:buyers(j).nitems
+%               buyers(j).items(k).time = buyers(j).items(k).time + 1; 
+%            end
+%         end
+%         for j=1:length(sellers)
+%            for k=1:sellers(j).nitems
+%               sellers(j).items(k).time = sellers(j).items(k).time + 1; 
+%            end
+%         end
+        for j=1:length(sellers)
+            if sellers(j).mode == 1
+                sellers(j).nitems = sellers(j).nitems + round(normrnd(nitems/n_set, 0.1));
+                for f=1:nbrands
+                   if sellers(j).brand == f
+                       for h=1:sellers(j).nitems
+                           sellers(j).items(h).price = brand(f).price*brand(f).socstat/80; 
+                           sellers(j).items(h).socstat = normrnd(sellers(j).socstat, 0.1);
+                           sellers(j).items(h).sold = 0;
+                           sellers(j).items(h).brand = sellers(j).brand;
+                           sellers(j).items(h).time = i/newitem;
+                       end
+                   end
+                end
+            end
+        end
+    end
+    
     for j=1:nbuy
        if buyers(j).mode == 3 %They are collectors and their desire is not already superstrong
-          buyers(j).desire = min(buyers(j).desire + rand()*10, 100); % Make the collectors desire increase as time progresses
+          buyers(j).desire = min(buyers(j).desire + rand()*5, 100); % Make the collectors desire increase as time progresses
        end
     end
     
@@ -258,9 +302,10 @@ while ~isempty(sellers) && ~isempty(buyers) && i<500
     c = 0;
     b = 0;
     d = 0;
-    avgt(i, :) = zeros(1, floor(i/newitem)+1);
+
+    %avgt(i, :) = zeros(1, floor(i/newitem)+1); % Store the average of all the items tht were introduced in the same period
     avgb(i, :) = zeros(1, nbrands);
-    ipt(i, :) = zeros(1, floor(i/newitem)+1);
+    %ipt(i, :) = zeros(1, floor(i/newitem)+1);
     ipb(i, :) = zeros(1, nbrands);
     u = 0;
     for j=1:length(sellers)
@@ -314,56 +359,56 @@ while ~isempty(sellers) && ~isempty(buyers) && i<500
            for  h=1:sellers(k).nitems  
                if (buyers(j).bprice>=sellers(k).items(h).price && rand()>Pc && buyers(j).bought == 0)
                    if rand()<(sellers(k).items(h).socstat/100)
-%                    if buyers(j).mode ~= 3 % If the buyer is not a collector, everything works fine
-                       % If there is a purchase, remove the item from the seller &
-                       % put it in the buyer. Subtract the money used for buying
-                       % from the buyer account & put it in the seller account
-                       sellers(k).nitems = sellers(k).nitems - 1;
-                       buyers(j).nitems = buyers(j).nitems + 1;
-                       %Assign a random proportion of the social status from the
-                       %seller to the buyer as they buy something from someone with
-                       %social status
-%                        buyers(j).socstat = buyers(j).socstat + (rand()*0.15+0.1)*sellers(k).items(h).socstat;
-%                        % If a socialitee sells one of the items, he loses social
-%                        % status
-%                        if sellers(k).mode ~= 1 % If the seller is not a setter, who won't lose its social status
-%                            sellers(k).socstat = sellers(k).socstat - (rand()*0.15+0.1)*sellers(k).items(h).socstat;
-%                        end
-                       soldprice = (buyers(j).bprice+sellers(k).items(h).price)/2; 
-                       buyers(j).money = buyers(j).money - soldprice;
-                       sellers(k).money = sellers(k).money + soldprice;
-                       buyers(j).items(buyers(j).nitems).socstat = normrnd(sellers(k).items(h).socstat, 1);
-                       buyers(j).items(buyers(j).nitems).brand = sellers(k).items(h).brand;
-                       buyers(j).items(buyers(j).nitems).time = sellers(k).items(h).time;
-                       if buyers(j).mode ~= 4
-                         buyers(j).items(buyers(j).nitems).price = buyers(j).bprice + (rand()*2-1)*buyers(j).items(buyers(j).nitems).socstat*5;
-                       end
-                       if buyers(j).mode == 4
-                           buyers(j).items(buyers(j).nitems).price = buyers(j).bprice + (rand())*buyers(j).items(buyers(j).nitems).socstat*3;
-                       end
-                       buyers(j).bought = 1; %Set a flag so that that buyer doesn't buy anymore this iteration
-                       sellers(k).sold = 1; %Set a flag to know that the seller has sold
-                       sellers(k).items(h) = [];
-%                        keyboard;
+                     if buyers(j).mode ~= 3 % If the buyer is not a collector, everything works fine
+                           % If there is a purchase, remove the item from the seller &
+                           % put it in the buyer. Subtract the money used for buying
+                           % from the buyer account & put it in the seller account
+                           sellers(k).nitems = sellers(k).nitems - 1;
+                           buyers(j).nitems = buyers(j).nitems + 1;
+                           soldprice = (buyers(j).bprice+sellers(k).items(h).price)/2; 
+                           buyers(j).money = buyers(j).money - soldprice;
+                           sellers(k).money = sellers(k).money + soldprice;
+                           buyers(j).items(buyers(j).nitems).socstat = normrnd(sellers(k).items(h).socstat, 1);
+                           buyers(j).items(buyers(j).nitems).brand = sellers(k).items(h).brand;
+                           buyers(j).items(buyers(j).nitems).time = sellers(k).items(h).time;
+                           if buyers(j).mode ~= 4
+                             buyers(j).items(buyers(j).nitems).price = sellers(k).items(h).price + (rand()+1)*buyers(j).items(buyers(j).nitems).socstat*5;
+                           end
+                           if buyers(j).mode == 4
+                               buyers(j).items(buyers(j).nitems).price = soldprice + (rand()+1)*buyers(j).items(buyers(j).nitems).socstat*3;
+                           end
+                           buyers(j).bought = 1; %Set a flag so that that buyer doesn't buy anymore this iteration
+                           sellers(k).sold = 1; %Set a flag to know that the seller has sold
+                           sellers(k).items(h) = [];
+    %                        keyboard;
                        break;
-%                    else
-                       % if sellers(k).mode ~= 1 % If the seller is not a setter, the collector is not interested in the item
-                       % else % If the seller is a setter, then the collector will buy
-%                            sellers(k).nitems = sellers(k).nitems - 1;
-%                            buyers(j).nitems = buyers(j).nitems + 1;
-%                            soldprice = (buyers(j).bprice+sellers(k).items(h).price)/2; 
-%                            buyers(j).money = buyers(j).money - soldprice;
-%                            sellers(k).money = sellers(k).money + soldprice;
-%                            %Assign the item to the buyer
-%                            buyers(j).items(buyers(j).nitems).socstat = sellers(k).items(h).socstat;
-%                            %
-%                            buyers(j).bought = 1; %Set a flag so that that buyer doesn't buy anymore this iteration
-%                            sellers(k).sold = 1; %Set a flag to know that the seller has sold
-% %                            buyers(j).items
-%                            sellers(k).items(h) = [];
-%                            break;
-                       %end
+                     end
+                       if buyers(j).mode == 3 && sellers(k).items(h).socstat >=40
+                               % If there is a purchase, remove the item from the seller &
+                           % put it in the buyer. Subtract the money used for buying
+                           % from the buyer account & put it in the seller account
+                           sellers(k).nitems = sellers(k).nitems - 1;
+                           buyers(j).nitems = buyers(j).nitems + 1;
+                           soldprice = (buyers(j).bprice+sellers(k).items(h).price)/2; 
+                           buyers(j).money = buyers(j).money - soldprice;
+                           sellers(k).money = sellers(k).money + soldprice;
+                           buyers(j).items(buyers(j).nitems).socstat = normrnd(sellers(k).items(h).socstat, 1);
+                           buyers(j).items(buyers(j).nitems).brand = sellers(k).items(h).brand;
+                           buyers(j).items(buyers(j).nitems).time = sellers(k).items(h).time;
+                           if buyers(j).mode ~= 4
+                             buyers(j).items(buyers(j).nitems).price = sellers(k).items(h).price + (rand()+1)*buyers(j).items(buyers(j).nitems).socstat*5;
+                           end
+                           if buyers(j).mode == 4
+                               buyers(j).items(buyers(j).nitems).price = soldprice + (rand()+1)*buyers(j).items(buyers(j).nitems).socstat*3;
+                           end
+                           buyers(j).bought = 1; %Set a flag so that that buyer doesn't buy anymore this iteration
+                           sellers(k).sold = 1; %Set a flag to know that the seller has sold
+                           sellers(k).items(h) = [];
+    %                        keyboard;
+                           break;
+                       end
                    end
+                   %buyers(j).bought = 1; % This says that the buyer didn´t buy the thing because of its socials status and not because of the money
                 end
                end
            end
@@ -387,11 +432,11 @@ while ~isempty(sellers) && ~isempty(buyers) && i<500
    end
     
     %The desire of collectors is reseted once they buy something
-    for j=1:length(buyers)
-        if buyers(j).mode == 3 && buyers(j).bought == 1
-            buyers(j).desire = rand()*20+10;
-        end
-    end
+%     for j=1:length(buyers)
+%         if buyers(j).mode == 3 && buyers(j).bought == 1
+%             buyers(j).desire = rand()*20+10;
+%         end
+%     end
     %Calculate social status based on the items they have and how much
     %social status these items have
     
@@ -422,17 +467,20 @@ while ~isempty(sellers) && ~isempty(buyers) && i<500
         if buyers(j).mode == 4 %Only the profiteers
             buyers(j).desire = buyers(j).bdes - (buyers(j).money - buyers(j).initmoney)*0.01;
         end
+        if buyers(j).mode == 3 %Collectors
+            buyers(j).desire = buyers(j).bdes + (buyers(j).bsoc - buyers(j).socstat)*0.5;
+        end
         buyers(j).desire = max(buyers(j).desire, 0);
         buyers(j).desire = min(buyers(j).desire, 100);
     end
     for j=1:length(sellers)
         if sellers(j).mode == 2 %Only if they are socialitees
-            sellers(j).desire = sellers(j).bdes + (sellers(j).bsoc - sellers(j).socstat)*0.8;
+            sellers(j).desire = sellers(j).bdes + (sellers(j).bsoc - sellers(j).socstat)*0.8; %Their desire lowers when they have a high social status and viceversa, it increases when they have a lower social status
             sellers(j).desire = max(sellers(j).desire, 0);
             sellers(j).desire = min(sellers(j).desire, 100);
         end
         if sellers(j).mode == 4 %Only the profiteers
-            sellers(j).desire = sellers(j).bdes - (sellers(j).money - sellers(j).initmoney)*0.01;
+            sellers(j).desire = sellers(j).bdes - (sellers(j).money - sellers(j).initmoney)*0.01; %Same as socialitees but 
             sellers(j).desire = max(sellers(j).desire, 0);
             sellers(j).desire = min(sellers(j).desire, 100);
         end
@@ -460,7 +508,6 @@ while ~isempty(sellers) && ~isempty(buyers) && i<500
            sellers(nsell+k).initmoney = buyers(j).initmoney;
            sellers(nsell+k).bsoc = buyers(j).bsoc;
            sellers(nsell+k).bdes = buyers(j).bdes;
-           % sellers(nsell+k).sprice = (price*(sellers(nsell+k).socstat/30))/normrnd(1.01, sigma);
            sellers(nsell+k).sold = 0; 
            svindex(k) = j; %Store the index of the buyer that has to be deleted
        end
@@ -634,54 +681,77 @@ while ~isempty(sellers) && ~isempty(buyers) && i<500
        end
     end
     
-    % Introduce new items each 20 timesteps
-    if mod(i, newitem) == 0
-        %Change the time value in each item
-%         for j=1:length(buyers)
-%            for k=1:buyers(j).nitems
-%               buyers(j).items(k).time = buyers(j).items(k).time + 1; 
-%            end
-%         end
-%         for j=1:length(sellers)
-%            for k=1:sellers(j).nitems
-%               sellers(j).items(k).time = sellers(j).items(k).time + 1; 
-%            end
-%         end
-        for j=1:length(sellers)
-            if sellers(j).mode == 1
-                sellers(j).nitems = sellers(j).nitems + round(normrnd(nitems/n_set, 0.1));
-                for f=1:nbrands
-                   if sellers(j).brand == f
-                       for h=1:sellers(j).nitems
-                           sellers(j).items(h).price = brand(f).price*brand(f).socstat/80; 
-                           sellers(j).items(h).socstat = normrnd(sellers(j).socstat, 0.1);
-                           sellers(j).items(h).sold = 0;
-                           sellers(j).items(h).brand = sellers(j).brand;
-                           sellers(j).items(h).time = i/newitem;
-                       end
-                   end
-                end
-            end
-        end
+    %In every iteration the social status of the shoe is affected by
+    %depretiation and by the vintageness of the shoe (brand)
+    %
+    delit = zeros(1, 2);
+    a = 0;
+    b = 0;
+    if mod(i, 4) == 0
+              vin = rand(nbrands, 1)*2 + 2;
     end
-    
-    %In every iteration old items lose social status until the have 10 social
-    %status
     for j=1:length(buyers)
        for k=1:buyers(j).nitems
-           buyers(j).items(k).socstat = buyers(j).items(k).socstat - rand()*5;
-           buyers(j).items(k).socstat = max(buyers(j).items(k).socstat, 10);
+           buyers(j).items(k).socstat = buyers(j).items(k).socstat - (rand()+1)*4; %The social status of the object is affecteed by depretiation
+           buyers(j).items(k).socstat = buyers(j).items(k).socstat + (rand()+1)*vin(buyers(j).items(k).brand); %The social status is affected by the vintageness of the brand
        end
+    end
+
+    % Delete the items that have a really low social status as nobody is
+    % going to buy them
+    itdel = zeros(1, 2); %his array keeps the index of the person and the index of the item tobe removed. First person, then item
+    a = 0;
+    for j=1:length(buyers)
+       for k=1:length(buyers(j).items)
+          if buyers(j).items(k).socstat <= 10
+              a = a + 1;
+             itdel(a, 1) = j;
+             itdel(a, 2) = k;
+          end
+       end
+    end
+    i1 = 0;
+    i2 = 0;
+    for j=1:a
+        i1 = itdel(end-j+1, 1); %This variable keeps the buyers from which the item has to be deleted
+        i2 = itdel(end-j+1, 2); %This variable keeps the index of the item to be deleted
+       buyers(i1).items(i2) = [];
+    end
+    for j=1:length(buyers)
+       buyers(j).nitems = length(buyers(j).items); 
     end
     for j=1:length(sellers)
         if sellers(j).mode ~= 1
            for k=1:sellers(j).nitems
-               sellers(j).items(k).socstat = sellers(j).items(k).socstat - rand()*5;
-               sellers(j).items(k).socstat = max(sellers(j).items(k).socstat, 10);
+               sellers(j).items(k).socstat = sellers(j).items(k).socstat - (rand()+1)*4; %The social status of the object is affected by depretiation
+               sellers(j).items(k).socstat = sellers(j).items(k).socstat + (rand()+1)*vin(sellers(j).items(k).brand); %The social status of the item is affected by the vintageness of the brand
            end
         end
     end
-    
+    % Delete the items that have a really low social status as nobody is
+    % going to buy them
+    itdel = zeros(1, 2); %his array keeps the index of the person and the index of the item tobe removed. First person, then item
+    a = 0;
+    for j=1:length(sellers)
+       for k=1:length(sellers(j).items)
+          if sellers(j).items(k).socstat <= 10
+              a = a + 1;
+             itdel(a, 1) = j;
+             itdel(a, 2) = k;
+          end
+       end
+    end
+    i1 = 0;
+    i2 = 0;
+    for j=1:a
+        i1 = itdel(end-j+1, 1); %This variable keeps the seller from which the item has to be deleted
+        i2 = itdel(end-j+1, 2); %This variable keeps the index of the item to be deleted
+       sellers(i1).items(i2) = [];
+    end
+    for j=1:length(sellers)
+       sellers(j).nitems = length(sellers(j).items);
+    end
+
     %Shift the buyers & the sellers so they randomize a little bit
     
    rndb = randperm(length(buyers));
@@ -710,16 +780,16 @@ while ~isempty(sellers) && ~isempty(buyers) && i<500
     plot(iter, avg(:, 4), 'DisplayName', 'Profiteers average buying price');
     hold on;
     drawnow;
-    legend;
+    legend ('Location', 'northwest');
 
     figure(2);
     hold off;
-    for j=1:size(avgt, 2)
-       plot(iter, avgt(:, j), 'DisplayName', strcat('Time ', num2str(j-1)));
+    for j=1:floor(i/newitem)+1
+       plot(iter, avgt(1:i, j), 'DisplayName', strcat('Time ', num2str(j-1)));
        hold on;
        drawnow;
     end
-    legend;
+    legend ('Location', 'northwest');
     figure(3);
     hold off;
     for j=1:(size(avgb, 2))
@@ -727,13 +797,13 @@ while ~isempty(sellers) && ~isempty(buyers) && i<500
        hold on;
        drawnow;
     end
-    legend;
+    legend ('Location', 'northwest');
 end
-figure(4);
-plot(iter, avg(:, 1), 'b', 'DisplayName', 'Sell price');
-hold on;
-plot(iter, avg(:, 2), 'r', 'DisplayName', 'Buy price');
-legend;
-keyboard;
+% figure(4);
+% plot(iter, avg(:, 1), 'b', 'DisplayName', 'Sell price');
+% hold on;
+% plot(iter, avg(:, 2), 'r', 'DisplayName', 'Buy price');
+% legend;
+% keyboard;
 end
 
