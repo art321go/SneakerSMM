@@ -1,4 +1,4 @@
-function [] = Financial_Model_Final(n_agents, n_items, price, nbrands, rndbrand, timesteps)
+function [] = Financial_Model(n_agents, n_items, price, nbrands, rndbrand, timesteps)
 %% This Function uses its inputs to run a simulation of a secondary market for sneakers. 
 %The inputs are:
 % n_agents : the total number of agents in the model
@@ -249,11 +249,8 @@ moneypagent = zeros(3, 1); %Save the amount of money interchanged by each agent.
     
 %% Iterate
 
-% keyboard;
 while ~isempty(sellers) && ~isempty(buyers) && i<timesteps
-    
     i = i + 1;
-    
        % Introduce new items each 20 timesteps
     if mod(i, newitem) == 0
         for j=1:length(sellers)
@@ -339,7 +336,6 @@ while ~isempty(sellers) && ~isempty(buyers) && i<timesteps
     avg(i, 4) = bpriceavgprof;
     iter(i) = i;
     
-%     keyboard;
     % Compare buying & selling prices and determine whether a purchase is
     % made or not based on a probability
     avgsoldprice(i) = 0;
@@ -448,20 +444,21 @@ while ~isempty(sellers) && ~isempty(buyers) && i<timesteps
       end
    end
    
-    for j=1:length(buyers)
-        buyers(j).socstat = buyers(j).bsoc;
-           for k=1:buyers(j).nitems
-              buyers(j).socstat = buyers(j).socstat + 0.2*buyers(j).items(k).socstat; 
-           end
-    end
-    for j=1:length(sellers)
+   for j=1:length(buyers)
+       buyers(j).socstat = buyers(j).bsoc;
+       
+       for k=1:buyers(j).nitems
+           buyers(j).socstat = buyers(j).socstat + 0.2*buyers(j).items(k).socstat; 
+       end
+   end
+   for j=1:length(sellers)
         if sellers(j).mode ~= 1
             sellers(j).socstat = sellers(j).bsoc;
            for k=1:sellers(j).nitems
               sellers(j).socstat = sellers(j).socstat + 0.2*sellers(j).items(k).socstat; 
            end
         end
-    end
+   end
     
 %% Updating Desire of agents 
     % The desire of the socialitees decreases as the have more socstat. But
