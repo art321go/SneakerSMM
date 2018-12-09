@@ -212,14 +212,10 @@ end
 % with a lower price so that they get bought
 
 %% Parameters to change something, such as the increase or decrease of the buying prices and selling prices, etc
-T = 20; %number of iterations for the time window for the sigma calculation
 Pc = 0.7; %probability an item is bought or sold (If a random number is higher than this value, then the item will be bought. If it is lower, it won't be bought
-sellpos = nsell; %This variable checks if there is any seller with items to sell
-buypos = nbuy; % This variable checks if there is any buyer with enough money to buy
 i = 0; % Checks the amount of iterations
 lowp = 35; %How much we lower the selling and buying prices of the agents who bought or sold something
 highp = 40; %How much we increase the prices in case the agent didn't do anything
-nful = 0;
 newitem = randi([45 60]); %How frequent we insert new items into the model
 avgt = zeros(timesteps, round(timesteps/newitem)+1); %Preallocate the matrix containing the averages of all the items from one time period
 ipt = zeros(timesteps, round(timesteps/newitem)+1); %Preallocate the matrix for the amount of items from one time period
