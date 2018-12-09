@@ -7,7 +7,7 @@ function [] = Financial_Model(n_agents, n_items, price, nbrands, timesteps)
 
 agent = struct ('money', 0, 'soc_stat', 0, 'items', 0, 'desire', 0, 'mode', 0, 'buysell', 0, 'sprice', 0, 'bprice', 0, 'bought', 0, 'sold', 0, 'keep', 0);
 seller = struct ('money', 0, 'nitems', 0, 'socstat', 0, 'bprice', 0, 'sold', 0, 'mode', 0, 'initmoney', 0, 'brand', 0, 'gain', 0);
-buyer = struct ('money', 0, 'nitems', 0, 'socstat', 0, 'desire', 0, 'bprice', 0, 'bought', 0, 'mode', 0, 'initmoney', 0, 'stay', 0, 'bdes', 0, 'gain', 0, 'avgiprice', 0);
+buyer = struct ('money', 0, 'nitems', 0, 'socstat', 0, 'desire', 0, 'bprice', 0, 'bought', 0, 'mode', 0, 'initmoney', 0, 'keep', 0, 'bdes', 0, 'gain', 0, 'avgiprice', 0);
 full = struct ('money', 0, 'nitems', 0, 'socstat', 0, 'mode', 0, 'initmoney', 0);
 brnd = struct ('price', 0, 'socstat', 0);
 % prob array has the following structure: 1 - set, 2 - soc, 3 - prof, 4 -
@@ -120,6 +120,7 @@ for i=n_set+n_soc+1:n_set+n_soc+n_coll % Assign the values to the collectors
     people(i).desire = rand()*10+50;
     people(i).mode = 3;
     people(i).buysell = 1;
+    people(i).keep = rand();
 end
 
 for i=n_set+n_soc+n_coll+1:n_agents % Assign the values to the profiteers
@@ -257,12 +258,6 @@ while ~isempty(sellers) && ~isempty(buyers) && i<timesteps
         newitem = randi([45 60]);
     end
     
-    for j=1:length(sellers)
-        for h=1:length(sellers(j).items)
-           sellers(j).items(h).price = max(sellers(j).items(h).price, 100); 
-        end
-    end
-    
     for j=1:length(buyers)
        buyers(j).bprice = max(buyers(j).bprice, 0); 
     end
@@ -379,7 +374,7 @@ while ~isempty(sellers) && ~isempty(buyers) && i<timesteps
                        end 
                        break;
                      end
-                       if buyers(j).mode == 3 && sellers(k).items(h).socstat >=40
+                       if buyers(j).mode == 3
                                % If there is a purchase, remove the item from the seller &
                            % put it in the buyer. Subtract the money used for buying
                            % from the buyer account & put it in the seller account
@@ -798,26 +793,5 @@ end
 figure(7);
 area(gain);
 xlim([0 n_prof]);
-figure(5);
-subplot(2, 1, 1);
-    hold off;
-    plot(iter, avg(:, 1), 'DisplayName', 'Average total selling price', 'Linewidth', 1);
-    hold on;
-    drawnow;
-    plot(iter, avg(:, 2), 'DisplayName', 'Socialitee average buying price', 'Linewidth', 1);
-    hold on;
-    drawnow;
-    plot(iter, avg(:, 3), 'DisplayName', 'Collectors average buying price', 'Linewidth', 1);
-    hold on;
-    drawnow;
-    plot(iter, avg(:, 4), 'DisplayName', 'Profiteers average buying price', 'Linewidth', 1);
-    hold on;
-    drawnow;
-    ylabel('Price [Currency Units]');
-    legend;
-subplot(2, 1, 2);
-    plot(iter, ntrans, 'DisplayName', 'Number of transactions');
-    ylabel('Transaction');
-    xlabel('Time [Days]');
 end
 
