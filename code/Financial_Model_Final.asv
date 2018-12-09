@@ -1,22 +1,37 @@
-function [] = Financial_Model(n_agents, n_items, price, nbrands, timesteps)
+function [] = Financial_Model(n_agents, n_items, price, nbrands, rndbrand, timesteps)
+%% This Function uses its inputs to run a simulation of a secondary market for sneakers. 
+%The inputs are:
+% n_agents : the total number of agents in the model
+% n_items : the total number of shoes in the model
+% price : the starting price of a shoe  (maybe shouldnt be fixed here?)
+% nbrands : the number of competing shoe brands
+% rndbrand : a parameter (0 or 1, to randomize the appeal of the shoes)
+% timesteps : the length of time simulated, one time step is one day
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   CAUTION: SET THE NUMBER OF BRANDS LOW ENOUGH SO EVERY BRAND HAS    %
-%  ENOUGH SETTERS                                                      %
+%   CAUTION: THE NUMBER OF BRANDS MUST BE LOWER THAN NUMBER OF         %
+%   TRENDSETTERS. THERE MUST BE MORE AGENTS THAT ITEMS TO MAKE A       %
+%   SENSIBLE ECONOMICA MODEL. OTHERWISE THERE IS NO SCARCITY           %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%The outputs are a series of graphs depicting price, profit, and social
+%status of the agents under various conditions
 
+
+%% Data Structure CREATION
 agent = struct ('money', 0, 'soc_stat', 0, 'items', 0, 'desire', 0, 'mode', 0, 'buysell', 0, 'sprice', 0, 'bprice', 0, 'bought', 0, 'sold', 0, 'keep', 0);
 seller = struct ('money', 0, 'nitems', 0, 'socstat', 0, 'bprice', 0, 'sold', 0, 'mode', 0, 'initmoney', 0, 'brand', 0, 'gain', 0);
 buyer = struct ('money', 0, 'nitems', 0, 'socstat', 0, 'desire', 0, 'bprice', 0, 'bought', 0, 'mode', 0, 'initmoney', 0, 'stay', 0, 'bdes', 0, 'gain', 0, 'avgiprice', 0);
 full = struct ('money', 0, 'nitems', 0, 'socstat', 0, 'mode', 0, 'initmoney', 0);
 brnd = struct ('price', 0, 'socstat', 0);
-% prob array has the following structure: 1 - set, 2 - soc, 3 - prof, 4 -
-% coll
+
 % The brand variable takes into account from which brand is the setter
 % selling the shoes. 0 - would be for independent sellers (The socialitees
 % and profiteers that are selling something)
-% The keep variable is only used by the collector to know if they will sell
+
+% The 'keep' variable is only used by the collector to know if they will sell
 % their stuff in order to get the new released items
+
 %The field initmoney is just only by the profiteers to know when they have
 %achieved their goal of maximizing their money
 
@@ -32,11 +47,15 @@ brnd = struct ('price', 0, 'socstat', 0);
 % time goes on because items will be more appreciated. For trendsetters
 % this value will be 0, since they do not want to buy their own stuff
 
+<<<<<<< HEAD:code/Financial_Model_git.m
+=======
+%% Assigning Roles to each agent
+>>>>>>> fc1925bbd9f9ee3d2f051978ef30fb2986e47faa:code/Financial_Model_Final.asv
 items_soc = repmat(1, n_items, 1); % We need to give each item a social status, so that the person that owns it has the social status attached to it. 
 people = repmat(agent, n_agents, 1);
 brand = repmat(brnd, nbrands, 1);
 total = 0;
-n_soc = 0; n_prof = 0; n_coll = 0; n_set = 0;
+n_soc = 0; n_prof = 0; n_coll = 0; n_set = 0; %variable initializations
 
 while(n_soc<=0 || n_prof<=0 || n_coll<=0 || n_set<=nbrands*3)
 n_coll = randi([round(n_agents*0.075), round(n_agents*0.1)]);
@@ -45,7 +64,13 @@ n_prof = randi([round(n_agents*0.3), round(n_agents*0.6)]);
 n_set = n_agents - n_prof - n_soc - n_coll;
 end
 
+
+
 % Assign the sellers to each brand
+if rndbrand == 0 %The prices and social status of the brand are not randomly set, they are hard coded
+    nbrands = 4;
+end
+
 sperbrand = zeros(1, nbrands);
 while (sperbrand) < 3 % There should be more than 3 trendsetters for each brand
     for i=1:nbrands
