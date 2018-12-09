@@ -382,7 +382,7 @@ while ~isempty(sellers) && ~isempty(buyers) && i<timesteps
                        end 
                        break;
                      end
-                       if buyers(j).mode == 3
+                       if buyers(j).mode == 3 && sellers(k).items(h).socstat >= 40
                                % If there is a purchase, remove the item from the seller &
                            % put it in the buyer. Subtract the money used for buying
                            % from the buyer account & put it in the seller account
@@ -770,5 +770,29 @@ area(gain);
 xlim([0 n_prof]);
 xlabel('Profiteers')
 ylabel('Net Profit')
-title('The End Profit of Each Profiteer')
+title('The End Profit of Each Profiteer');
+figure(5);
+area(gain);
+xlim([0 n_prof]);
+figure(6);
+subplot(2, 1, 1);
+    hold off;
+    plot(iter, avg(:, 1), 'DisplayName', 'Average total selling price', 'Linewidth', 1);
+    hold on;
+    drawnow;
+    plot(iter, avg(:, 2), 'DisplayName', 'Socialitee average buying price', 'Linewidth', 1);
+    hold on;
+    drawnow;
+    plot(iter, avg(:, 3), 'DisplayName', 'Collectors average buying price', 'Linewidth', 1);
+    hold on;
+    drawnow;
+    plot(iter, avg(:, 4), 'DisplayName', 'Profiteers average buying price', 'Linewidth', 1);
+    hold on;
+    drawnow;
+    ylabel('Price [Currency Units]');
+    legend;
+subplot(2, 1, 2);
+    plot(iter, ntrans, 'DisplayName', 'Number of transactions');
+    ylabel('Transaction');
+    xlabel('Time [Days]');
 end
